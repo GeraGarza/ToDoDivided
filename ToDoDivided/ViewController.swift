@@ -63,9 +63,6 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
-    //MARK:- Add new item
-    
-    
     @IBAction func AddButtonClicked(_ sender: UIBarButtonItem) {
         
         var textField = UITextField()
@@ -99,8 +96,7 @@ class TodoListViewController: UITableViewController {
     }
     tableView.reloadData()
     }
-    
-    
+   
     func loadItems(){
         
         itemToDo = realm.objects(Item.self)
