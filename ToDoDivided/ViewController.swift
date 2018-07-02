@@ -1,18 +1,22 @@
 
 import UIKit
+import RealmSwift
 
 class TodoListViewController: UITableViewController {
     
-    var itemArray  = ["one","two"]
     
-    let defaults = UserDefaults.standard
+    let realm = try! Realm()
+    var itemToDo : Results<Item>?
+    
+    //let defaults = UserDefaults.standard
+    
+    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
-
-        
+        loadItems()
 
     }
     
@@ -20,7 +24,8 @@ class TodoListViewController: UITableViewController {
     
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        //nil coalescing operator
+        return itemToDo?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -28,13 +33,15 @@ class TodoListViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "goToItems", for: indexPath)
         
-        let item =  itemArray[indexPath.row]
         
-        cell.textLabel?.text = item
+        if let item = itemToDo?[indexPath.row]{
         
-        
-        //value = condition ? valueT : valueF
-       // cell.accessoryType = item.done ? .checkmark : .none
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done ? .checkmark : .none
+            
+        }else{
+            cell.textLabel?.text = "no Items"
+        }
         
         return cell
     }
@@ -42,6 +49,16 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
    
+        if let item = itemToDo?[indexPath.row]{
+            do{
+                try realm.write {
+                    item.done = !item.done
+                    }
+                }catch{
+                    print(error)
+                }
+        }
+        
         tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -57,21 +74,41 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             
-            self.itemArray.append(textField.text!)
-
-            self.tableView.reloadData()
+            let newitem = Item()
+            newitem.title = textField.text!
+            self.save(item: newitem)
         }
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new"
             textField = alertTextField
         }
-        
-        
         alert.addAction(action)
-        
-        
+
         present(alert, animated: true)
+    }
+    
+    func save(item : Item){
+
+    do{
+        try realm.write {
+            realm.add(item)
+        }
+    }catch{
+    print(error)
+    }
+    tableView.reloadData()
+    }
+    
+    
+    func loadItems(){
+        
+        itemToDo = realm.objects(Item.self)
+        //itemsArray = selectedCategory?.items.sorted(byKeyPath:
+        //"title", ascending: true)
+        tableView.reloadData()
+
+        
     }
 
 }
